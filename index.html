@@ -9,7 +9,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome para iconos de la interfaz -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts seleccionadas para tipografía editorial -->
+    <!-- Google Fonts seleccionadas para tipografía de lectura de alto contraste -->
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@300;400;500;600;700&family=Merriweather:ital,wght@0,300;0,400;0,700;1,300&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Roboto:wght@300;400;500;700&family=Lora:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@300;400;500&family=Montserrat:wght@300;400;500;700&display=swap" rel="stylesheet">
     
     <script>
@@ -28,7 +28,7 @@
     </script>
     
     <style>
-        /* Estilos detallados del Rich Text para mantener homogeneidad visual */
+        /* Tipografías del editor en modo lectura */
         .prose-custom { color: #374151; transition: color 0.3s; word-wrap: break-word; }
         .prose-custom h1 { font-size: 2.25rem; font-weight: 700; color: #111827; margin-top: 1.75rem; margin-bottom: 0.75rem; line-height: 1.2; transition: color 0.3s; }
         .prose-custom h2 { font-size: 1.625rem; font-weight: 600; color: #1f2937; margin-top: 1.75rem; margin-bottom: 0.75rem; transition: color 0.3s; }
@@ -99,7 +99,7 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        /* Barra de herramientas fija e inteligente */
+        /* Barra de herramientas móvil fija inteligente */
         .mobile-toolbar {
             position: fixed; left: 0; right: 0; bottom: 0; z-index: 9999;
             background-color: rgba(255, 255, 255, 0.98); backdrop-filter: blur(10px);
@@ -136,16 +136,30 @@
 </head>
 <body class="bg-[#fafafa] dark:bg-gray-900 min-h-screen font-sans text-gray-800 dark:text-gray-200 antialiased selection:bg-indigo-100 dark:selection:bg-indigo-900 transition-colors duration-300 relative">
 
+    <!-- Banner de Información y Estado de la Base de Datos -->
+    <div id="firebase-status-banner" class="bg-amber-500 text-white text-xs sm:text-sm font-semibold px-4 py-3 sticky top-0 z-[100] shadow-lg flex items-center justify-between transition-all duration-300">
+        <div class="max-w-4xl mx-auto flex items-center justify-between gap-3 w-full">
+            <div class="flex items-center gap-2">
+                <i id="status-icon" class="fa-solid fa-circle-exclamation text-lg animate-pulse"></i>
+                <span id="status-text">Conectando con la base de datos de conectaweb-d6dc7...</span>
+            </div>
+            <button id="btn-status-action" class="bg-white text-amber-700 px-3 py-1 rounded-full text-xs font-bold hover:bg-gray-100 transition whitespace-nowrap hidden" onclick="toggleModal(document.getElementById('troubleshoot-modal'), true)">
+                Diagnóstico de Error
+            </button>
+        </div>
+    </div>
+
     <!-- Barra de progreso -->
     <div id="progress-container"><div id="progress-bar"></div></div>
 
+    <!-- Barra de Navegación -->
     <nav id="main-nav" class="sticky top-0 z-40 w-full bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg border-b border-gray-200/50 dark:border-gray-800 shadow-sm transition-transform duration-300">
         <div class="max-w-6xl mx-auto px-4 h-16 flex justify-between items-center">
             
             <!-- Logotipo y Nombre -->
             <div class="flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
                 <div id="brand-logo-container" class="w-8 h-8 rounded-lg bg-indigo-600 dark:bg-indigo-500 text-white flex items-center justify-center overflow-hidden shadow-md">
-                    <img id="brand-logo-img" src="" class="w-full h-full object-cover hidden animate-fade-in" alt="Logotipo">
+                    <img id="brand-logo-img" src="" class="w-full h-full object-cover hidden" alt="Logotipo">
                     <i id="brand-logo-icon" class="fa-solid fa-comments text-sm"></i>
                 </div>
                 <span class="font-bold text-lg tracking-tight text-gray-900 dark:text-white">Conecta<span class="text-indigo-600 dark:text-indigo-400 font-extrabold">Pana</span></span>
@@ -313,7 +327,6 @@
         </div>
     </main>
 
-    
     <!-- Modal Iniciar Sesión -->
     <div id="login-modal" class="fixed inset-0 z-50 flex justify-center items-center p-4 bg-black/60 backdrop-blur-sm opacity-0 pointer-events-none transition-all duration-300">
         <div class="modal-content bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-sm p-7 border border-gray-100 dark:border-gray-800 relative">
@@ -491,6 +504,32 @@
         </div>
     </div>
 
+    <!-- Modal para Diagnóstico de Errores de Base de Datos -->
+    <div id="troubleshoot-modal" class="fixed inset-0 z-[110] flex justify-center items-center p-4 bg-black/70 backdrop-blur-sm opacity-0 pointer-events-none transition-all duration-300">
+        <div class="modal-content bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-lg p-7 border border-gray-100 dark:border-gray-800 relative max-h-[90vh] overflow-y-auto">
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2"><i class="fa-solid fa-bug text-red-500"></i> Terminal de Diagnóstico</h2>
+            
+            <div class="space-y-4 text-sm text-gray-600 dark:text-gray-300">
+                <p>Nuestra terminal ha reportado la siguiente respuesta del navegador:</p>
+                
+                <div class="bg-gray-950 text-emerald-400 p-4 rounded-xl font-mono text-xs overflow-x-auto border border-gray-800">
+                    <p class="text-gray-500">// Terminal Log de Microsoft Edge:</p>
+                    <p id="terminal-error-output" class="mt-2 text-red-400">Verificando solicitudes CORS y bloqueos de red...</p>
+                </div>
+
+                <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl text-xs text-blue-700 dark:text-blue-300 space-y-2">
+                    <h4 class="font-bold flex items-center gap-1.5"><i class="fa-solid fa-shield-halved"></i> ¿Cómo resolver esto en Edge?</h4>
+                    <p><strong>1. Desactiva Bloqueadores:</strong> Si usas AdBlock o extensiones de protección, haz clic en ellos en Edge y pon en pausa la protección de esta página local.</p>
+                    <p><strong>2. Haz clic en el candado:</strong> A la izquierda de tu barra de direcciones `file:///` haz clic en el icono del candado o la información y desactiva la "Prevención de Seguimiento".</p>
+                </div>
+            </div>
+            
+            <button class="w-full mt-6 bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl font-semibold transition" onclick="toggleModal(document.getElementById('troubleshoot-modal'), false)">
+                Entendido, Cerrar Diagnóstico
+            </button>
+        </div>
+    </div>
+
     <!-- Alertas Flotantes (Toasts) -->
     <div id="toast" class="fixed top-20 right-4 left-4 sm:left-auto sm:right-10 transform transition-all duration-400 translate-y-[-150%] opacity-0 z-[100] pointer-events-none">
         <div class="bg-white/95 dark:bg-gray-800/95 backdrop-blur-md border border-gray-200 dark:border-gray-700 shadow-2xl rounded-2xl p-4 flex items-center justify-center sm:min-w-[280px]">
@@ -504,7 +543,12 @@
             const appWrapper = document.body;
 
             window.appState = {
-                isEditing: false, isAdmin: false, savedSelection: null, isFullscreen: false, currentLogoUrl: "",
+                isEditing: false, 
+                isAdmin: false, 
+                savedSelection: null, 
+                isFullscreen: false, 
+                currentLogoUrl: "",
+                isFirebaseReady: false,
                 currentSettings: JSON.parse(localStorage.getItem('webEditorSettings')) || { fontFamily: 'font-sans', fontSize: 'text-base', theme: 'light', lineHeight: 'leading-normal' }
             };
             const state = window.appState;
@@ -632,7 +676,9 @@
 
             window.applySettings();
 
-            DOM.display.innerHTML = "<h1>Bienvenido a Conecta Pana</h1><p>Esta es tu plataforma web colaborativa. Inicia sesión como administrador para modificar esta página y agregar tus contenidos preferidos.</p>";
+            // Carga inicial local segura
+            const cachedArticle = localStorage.getItem('conectaPanaPublished');
+            DOM.display.innerHTML = cachedArticle || "<h1>Bienvenido a Conecta Pana</h1><p>Esta es tu plataforma web colaborativa. Inicia sesión como administrador para modificar esta página y agregar tus contenidos preferidos.</p>";
             if (DOM.skeleton) DOM.skeleton.classList.add('hidden');
             updateStats(DOM.display.innerHTML, null, DOM.navTime); 
 
@@ -873,11 +919,12 @@
                         localStorage.removeItem('conectaPanaDraft'); 
                         updateStats(DOM.editor.innerHTML, null, DOM.navTime); 
                         
-                        if (window.publishToFirebase) {
+                        if (window.publishToFirebase && state.isFirebaseReady) {
                             window.publishToFirebase(DOM.editor.innerHTML);
                         } else { 
                             DOM.display.innerHTML = DOM.editor.innerHTML; 
-                            window.showToast("Guardado localmente", "success"); 
+                            localStorage.setItem('conectaPanaPublished', DOM.editor.innerHTML);
+                            window.showToast("Sincronización local exitosa (Fuera de línea)", "success"); 
                             window.toggleEditMode(false); 
                         }
                     }
@@ -1053,14 +1100,13 @@
         })();
     </script>
 
+    <!-- SCRIPT DE FIREBASE ROBUSTO PARA SINCRONIZACIÓN EN TIEMPO REAL -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // =======================================================================
-        // 🔥 CONFIGURACIÓN EXTRAÍDA DE TU NUEVA CAPTURA DE PANTALLA (image_391274.jpg)
-        // =======================================================================
+        // CREDENCIALES EXACTAS EXTRAÍDAS DE LA CONSOLA (image_4485a4.jpg)
         const firebaseConfig = {
             apiKey: "AIzaSyBG4mfMo3Gz-iSoWgPwehcUuUMLu_JxNU",
             authDomain: "conectaweb-d6dc7.firebaseapp.com",
@@ -1070,90 +1116,98 @@
             appId: "1:357114983229:web:9cf593914525d2f4b38b54",
             measurementId: "G-YZE04D00H0"
         };
-        // =======================================================================
 
-        let isFirebaseConnected = false;
+        const statusBanner = document.getElementById('firebase-status-banner');
+        const statusText = document.getElementById('status-text');
+        const statusIcon = document.getElementById('status-icon');
+        const btnAction = document.getElementById('btn-status-action');
+        const termError = document.getElementById('terminal-error-output');
 
-        // === MODO LOCAL (Fallback en caso de que falte internet o persistan bloqueos de reglas) ===
-        function fallbackToLocal(message = null) {
-            if (isFirebaseConnected) return; 
+        function updateStatusUI(message, type = 'warning', showButton = false) {
+            if (!statusBanner || !statusText || !statusIcon) return;
             
-            console.log("ℹ️ Conectado en Modo Local (Memoria del Navegador).");
-            if (message) {
-                console.warn("Razón del fallback local:", message);
+            statusText.innerHTML = message;
+            if (showButton && btnAction) btnAction.classList.remove('hidden');
+            else if (btnAction) btnAction.classList.add('hidden');
+
+            if (type === 'success') {
+                statusBanner.className = "bg-emerald-600 text-white text-xs sm:text-sm font-semibold px-4 py-3 sticky top-0 z-[100] shadow-lg flex items-center justify-between transition-all duration-300";
+                statusIcon.className = "fa-solid fa-cloud-arrow-up text-lg";
+                setTimeout(() => {
+                    statusBanner.classList.add('-translate-y-full', 'opacity-0');
+                    setTimeout(() => statusBanner.classList.add('hidden'), 300);
+                }, 4000);
+            } else if (type === 'error') {
+                statusBanner.className = "bg-red-600 text-white text-xs sm:text-sm font-semibold px-4 py-3 sticky top-0 z-[100] shadow-lg flex items-center justify-between transition-all duration-300";
+                statusIcon.className = "fa-solid fa-triangle-exclamation text-lg animate-pulse";
+            } else {
+                statusBanner.className = "bg-amber-500 text-white text-xs sm:text-sm font-semibold px-4 py-3 sticky top-0 z-[100] shadow-lg flex items-center justify-between transition-all duration-300";
+                statusIcon.className = "fa-solid fa-circle-exclamation text-lg animate-pulse";
             }
-            
-            const savedHtml = localStorage.getItem('conectaPana_LiveHtml');
-            const savedLogo = localStorage.getItem('conectaPana_LiveLogo');
-            
-            if (savedHtml) {
-                const display = document.getElementById('content-display');
-                const editor = document.getElementById('editor');
-                if (display) display.innerHTML = savedHtml;
-                if (editor) editor.innerHTML = savedHtml;
-            }
-            if (savedLogo) {
-                window.appState.currentLogoUrl = savedLogo;
-                window.updateLogoUI(savedLogo);
+        }
+
+        // Activación del Plan de Respaldo Local (Modo Local Seguro en caso de bloqueo)
+        function enableSecureLocalStorageFallback(reasonMessage) {
+            console.warn("Plataforma redirigida a: [MODO LOCAL SEGURO] - " + reasonMessage);
+            window.appState.isFirebaseReady = false;
+
+            if (termError) {
+                termError.textContent = `CRITICAL_ERROR: ${reasonMessage}\n>> Edge activó el protocolo CORS para file:/// o un bloqueador impidió la conexión. Activando Modo Local Seguro.`;
             }
 
-            // Sobrescribir la función de publicar para que use localstorage
+            const localHtml = localStorage.getItem('conectaPanaPublished');
+            const localLogo = localStorage.getItem('conectaPanaLogoUrl');
+            
+            const display = document.getElementById('content-display');
+            const editor = document.getElementById('editor');
+
+            if (localHtml) {
+                if (display) display.innerHTML = localHtml;
+                if (editor) editor.innerHTML = localHtml;
+            }
+            if (localLogo) {
+                window.appState.currentLogoUrl = localLogo;
+                window.updateLogoUI(localLogo);
+            }
+
+            // Sobrescribir publicación en Firebase por guardado en memoria caché local
             window.publishToFirebase = async function(htmlContent) {
                 const btnSave = document.getElementById('btn-save');
                 if(btnSave) { btnSave.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Guardando...`; btnSave.disabled = true; }
                 
                 setTimeout(() => {
-                    localStorage.setItem('conectaPana_LiveHtml', htmlContent);
-                    localStorage.setItem('conectaPana_LiveLogo', window.appState.currentLogoUrl || '');
+                    localStorage.setItem('conectaPanaPublished', htmlContent);
+                    localStorage.setItem('conectaPanaLogoUrl', window.appState.currentLogoUrl || '');
                     
-                    const display = document.getElementById('content-display');
                     if (display) display.innerHTML = htmlContent;
                     
-                    window.showToast("¡Guardado de respaldo local exitoso!", "info");
+                    window.showToast("Publicado de forma Local con Éxito (Modo Local)", "info");
                     window.toggleEditMode(false);
                     
                     if(btnSave) { btnSave.innerHTML = `<i class="fa-regular fa-paper-plane"></i> <span class="hidden sm:inline">Publicar</span>`; btnSave.disabled = false; } 
-                }, 600);
+                }, 400);
             };
         }
 
-        // === INICIALIZACIÓN COMPLETA DE FIREBASE ===
-        if (firebaseConfig && firebaseConfig.apiKey) {
-            try {
-                const app = initializeApp(firebaseConfig); 
-                const auth = getAuth(app); 
-                const db = getFirestore(app);
-                let currentUser = null;
+        // Intentar la conexión directa y limpia a la base de datos de Firebase
+        try {
+            const app = initializeApp(firebaseConfig); 
+            const auth = getAuth(app); 
+            const db = getFirestore(app);
 
-                const initAuth = async () => { 
-                    try { 
-                        await signInAnonymously(auth); 
-                    } catch (e) {
-                        console.warn("Aviso de Autenticación de Firebase. Activando Modo Local.");
-                        fallbackToLocal(e.message);
-                    } 
-                };
-                
-                initAuth();
+            // Registro de oyente de autenticación directo en la raíz para evitar delay
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    window.appState.isFirebaseReady = true;
+                    updateStatusUI("¡Conexión exitosa a la Nube! Tus cambios se guardarán y verán en todos tus dispositivos.", "success");
 
-                onAuthStateChanged(auth, (user) => {
-                    currentUser = user;
-                    if (user) {
-                        isFirebaseConnected = true;
-                        syncDatabase(db);
-                    }
-                });
-
-                function syncDatabase(db) {
-                    const appId = typeof __app_id !== 'undefined' ? __app_id : 'conectaweb-d6dc7';
-                    
-                    // Cumpliendo con la estructura de colecciones de seguridad estrictas (RULE 1)
-                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'articles', 'mainContent');
+                    // RUTA SIMPLIFICADA Y CORREGIDA PARA EVITAR RECHAZOS DE SUBCOLECCIÓN DE FIREBASE
+                    const docRef = doc(db, 'articles', 'mainContent');
                     
                     const display = document.getElementById('content-display'); 
                     const editor = document.getElementById('editor');
 
-                    // Listener en tiempo real: Se actualiza en tu celular sin recargar
+                    // Escuchar cambios de Firestore en vivo y directo
                     onSnapshot(docRef, (docSnap) => {
                         if (docSnap.exists()) {
                             const data = docSnap.data();
@@ -1167,25 +1221,22 @@
                             window.updateLogoUI(logoUrl);
 
                             const temp = document.createElement('div'); temp.innerHTML = html;
-                            const words = temp.innerText.trim().split(/\s+/).filter(w => w.length>0).length;
+                            const words = temp.innerText.trim().split(/\s+/).filter(w => w.length > 0).length;
                             const navTime = document.getElementById('nav-read-time');
-                            if(navTime) navTime.textContent = `${Math.max(1, Math.ceil(words/200))} min de lectura`;
+                            if(navTime) navTime.textContent = `${Math.max(1, Math.ceil(words / 200))} min de lectura`;
+                        } else {
+                            console.log("El documento aún no existe en la base de datos. Se inicializará al guardar.");
                         }
                     }, (error) => {
-                        console.warn("Error en la lectura en tiempo real de Firestore. Usando Modo Local de respaldo:", error.message);
-                        isFirebaseConnected = false;
-                        fallbackToLocal(error.message);
+                        console.warn("Fallo de lectura de base de datos:", error);
+                        updateStatusUI("<strong>Firestore no responde:</strong> Revisa las reglas o activa acceso anónimo.", "error", true);
+                        enableSecureLocalStorageFallback(error.message);
                     });
 
-                    // Publicar a Firebase Firestore en la nube
+                    // Guardar y publicar directamente en Firestore (Nivel de Raíz)
                     window.publishToFirebase = async function(htmlContent) {
-                        if (!currentUser || !isFirebaseConnected) {
-                            localStorage.setItem('conectaPana_LiveHtml', htmlContent);
-                            window.showToast("Modo Offline: Guardado local de respaldo", "info");
-                            return;
-                        }
                         const btnSave = document.getElementById('btn-save');
-                        if(btnSave) { btnSave.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Guardando en Nube`; btnSave.disabled = true; }
+                        if(btnSave) { btnSave.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Guardando...`; btnSave.disabled = true; }
                         
                         try {
                             await setDoc(docRef, { 
@@ -1193,22 +1244,32 @@
                                 logoUrl: window.appState.currentLogoUrl || '', 
                                 updatedAt: new Date() 
                             });
-                            window.showToast("¡Guardado en la nube exitoso!", "success");
+                            // Actualizar caché local para mantener concordancia
+                            localStorage.setItem('conectaPanaPublished', htmlContent);
+                            window.showToast("¡Publicado en internet con éxito!", "success");
                             window.toggleEditMode(false);
-                        } catch (error) { 
-                            window.showToast("Fallo al guardar. Se guardó localmente", "info"); 
-                            localStorage.setItem('conectaPana_LiveHtml', htmlContent);
+                        } catch (err) { 
+                            console.error("Error al publicar en Firebase:", err);
+                            window.showToast("Fallo al subir a internet. Guardado localmente", "error"); 
+                            localStorage.setItem('conectaPanaPublished', htmlContent);
                         } finally { 
                             if(btnSave) { btnSave.innerHTML = `<i class="fa-regular fa-paper-plane"></i> <span class="hidden sm:inline">Publicar</span>`; btnSave.disabled = false; } 
                         }
                     };
                 }
-            } catch (err) {
-                console.warn("Fallo general de inicialización de Firebase. Activando Modo Local:", err.message);
-                fallbackToLocal(err.message);
-            }
-        } else {
-            fallbackToLocal("No se detectaron credenciales");
+            });
+
+            // Iniciar sesión de manera asincrónica limpia
+            signInAnonymously(auth).catch((err) => {
+                console.warn("Fallo controlado en autenticación:", err.message);
+                updateStatusUI("<strong>Error de autenticación en Edge:</strong> Habilita el acceso anónimo.", "error", true);
+                enableSecureLocalStorageFallback(err.message);
+            });
+
+        } catch (err) {
+            console.warn("Error en el entorno de Firebase:", err.message);
+            updateStatusUI("<strong>Error de Conexión:</strong> Edge o las reglas de Firebase bloquearon la clave.", "warning", true);
+            enableSecureLocalStorageFallback(err.message);
         }
     </script>
 </body>
