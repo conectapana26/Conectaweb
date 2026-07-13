@@ -136,16 +136,6 @@
 </head>
 <body class="bg-[#fafafa] dark:bg-gray-900 min-h-screen font-sans text-gray-800 dark:text-gray-200 antialiased selection:bg-indigo-100 dark:selection:bg-indigo-900 transition-colors duration-300 relative">
 
-    <!-- Banner de Información y Estado de la Base de Datos -->
-    <div id="firebase-status-banner" class="bg-amber-500 text-white text-xs sm:text-sm font-semibold px-4 py-3 sticky top-0 z-[100] shadow-lg flex items-center justify-between transition-all duration-300">
-        <div class="max-w-4xl mx-auto flex items-center justify-between gap-3 w-full">
-            <div class="flex items-center gap-2">
-                <i id="status-icon" class="fa-solid fa-circle-exclamation text-lg animate-pulse"></i>
-                <span id="status-text">Estableciendo conexión en la nube sin restricciones...</span>
-            </div>
-        </div>
-    </div>
-
     <!-- Barra de progreso -->
     <div id="progress-container"><div id="progress-bar"></div></div>
 
@@ -215,7 +205,13 @@
                     <i class="fa-solid fa-xmark"></i> <span class="hidden sm:inline">Cancelar</span>
                 </button>
                 
-                <div class="flex items-center gap-4 text-xs font-semibold text-gray-400">
+                <div class="flex items-center gap-3 text-xs font-semibold text-gray-400">
+                    <!-- LED Indicador de Conexión en Nube -->
+                    <div id="editor-led-container" class="flex items-center gap-1.5 bg-gray-100 dark:bg-gray-800 px-3 py-1.5 rounded-full select-none" title="Estado de la base de datos">
+                        <span id="editor-led-dot" class="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse transition-all duration-300"></span>
+                        <span id="editor-led-text" class="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">Conectando</span>
+                    </div>
+
                     <div class="flex items-center gap-1.5 bg-gray-100 dark:bg-gray-800 px-3 py-1.5 rounded-full cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 transition" id="btn-fullscreen" title="Modo Concentración">
                         <i class="fa-solid fa-expand text-indigo-500"></i> <span class="hidden sm:inline">Concentración</span>
                     </div>
@@ -1090,25 +1086,23 @@
             measurementId: "G-YZE04D00H0"
         };
 
-        const statusBanner = document.getElementById('firebase-status-banner');
-        const statusText = document.getElementById('status-text');
-        const statusIcon = document.getElementById('status-icon');
+        function updateLedUI(state) {
+            const ledDot = document.getElementById('editor-led-dot');
+            const ledText = document.getElementById('editor-led-text');
+            if (!ledDot || !ledText) return;
 
-        function updateStatusUI(message, type = 'warning') {
-            if (!statusBanner || !statusText || !statusIcon) return;
-            
-            statusText.innerHTML = message;
-
-            if (type === 'success') {
-                statusBanner.className = "bg-emerald-600 text-white text-xs sm:text-sm font-semibold px-4 py-3 sticky top-0 z-[100] shadow-lg flex items-center justify-between transition-all duration-300";
-                statusIcon.className = "fa-solid fa-cloud-arrow-up text-lg";
-                setTimeout(() => {
-                    statusBanner.classList.add('-translate-y-full', 'opacity-0');
-                    setTimeout(() => statusBanner.classList.add('hidden'), 300);
-                }, 4000);
-            } else if (type === 'error') {
-                statusBanner.className = "bg-red-600 text-white text-xs sm:text-sm font-semibold px-4 py-3 sticky top-0 z-[100] shadow-lg flex items-center justify-between transition-all duration-300";
-                statusIcon.className = "fa-solid fa-triangle-exclamation text-lg animate-pulse";
+            if (state === 'connected') {
+                ledDot.className = "w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.7)]";
+                ledText.className = "text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400";
+                ledText.textContent = "Conectado";
+            } else if (state === 'error') {
+                ledDot.className = "w-2.5 h-2.5 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.7)]";
+                ledText.className = "text-[10px] font-bold uppercase tracking-wider text-red-500";
+                ledText.textContent = "Modo Local";
+            } else {
+                ledDot.className = "w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse";
+                ledText.className = "text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400";
+                ledText.textContent = "Conectando";
             }
         }
 
@@ -1127,7 +1121,7 @@
 
             // Escuchar cambios de Firestore en vivo y directo sin restricciones de Auth
             onSnapshot(docRef, (docSnap) => {
-                updateStatusUI("¡Conexión libre activa! Tus cambios se verán en todos tus dispositivos.", "success");
+                updateLedUI('connected');
 
                 if (docSnap.exists()) {
                     const data = docSnap.data();
@@ -1149,7 +1143,7 @@
                 }
             }, (error) => {
                 console.error("Firestore Error:", error);
-                updateStatusUI("<strong>Error al leer de la base de datos:</strong> Revisa la conexión.", "error");
+                updateLedUI('error');
             });
 
             // Guardar y publicar directamente en Firestore
@@ -1170,9 +1164,11 @@
                     
                     window.showToast("¡Publicado en internet con éxito!", "success");
                     window.toggleEditMode(false);
+                    updateLedUI('connected');
                 } catch (err) { 
                     console.error("Error al publicar:", err);
                     window.showToast("Error al subir a internet.", "error"); 
+                    updateLedUI('error');
                 } finally { 
                     if(btnSave) { btnSave.innerHTML = `<i class="fa-regular fa-paper-plane"></i> <span class="hidden sm:inline">Publicar</span>`; btnSave.disabled = false; } 
                 }
@@ -1180,7 +1176,7 @@
 
         } catch (err) {
             console.error("Error en inicialización Firebase:", err);
-            updateStatusUI("<strong>Error de Conexión:</strong> No se pudo conectar a la base de datos.", "error");
+            updateLedUI('error');
         }
     </script>
 </body>
